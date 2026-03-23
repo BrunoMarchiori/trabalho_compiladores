@@ -1,0 +1,28 @@
+# Executáveis
+compilador_racket
+*.exe
+*.out
+
+# Arquivos compilados
+*.o
+*.a
+*.so
+*.dylib
+
+# Objetos e bibliotecas
+*.obj
+*.lib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Dependências
+node_modules/
