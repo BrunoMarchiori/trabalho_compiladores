@@ -6,13 +6,15 @@
 #include "Model/Regex.hpp"
 #include "Model/Token.h"
 
+using namespace std;
+
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
     
-    std::cout << "========================================" << std::endl;
-    std::cout << "  Compilador Racket - MVC Architecture  " << std::endl;
-    std::cout << "========================================" << std::endl;
+    cout << "========================================" << endl;
+    cout << "  Compilador Racket - MVC Architecture  " << endl;
+    cout << "========================================" << endl;
     
     // TODO: Implementar pipeline completo
     // 1. Carregar regras léxicas (regex.txt)
@@ -21,18 +23,18 @@ int main(int argc, char* argv[]) {
     // 4. Usar Parser para gerar Árvore Sintática
     // 5. Exibir resultados/erros
     
-    std::cout << "\n[INFO] Estrutura MVC inicializada com sucesso!" << std::endl;
-    std::cout << "  - Model: Autômatos (AFND-ε → AFND → AFD → AFD-Min)" << std::endl;
-    std::cout << "  - Controller: ScannerGenerator + Parser" << std::endl;
-    std::cout << "  - View: (a implementar)" << std::endl;
+    cout << "\n[INFO] Estrutura MVC inicializada com sucesso!" << endl;
+    cout << "  - Model: Autômatos (AFND-ε → AFND → AFD → AFD-Min)" << endl;
+    cout << "  - Controller: ScannerGenerator + Parser" << endl;
+    cout << "  - View: (a implementar)" << endl;
     
-    std::cout << "\n[TODO] Próximos passos:" << std::endl;
-    std::cout << "  1. Implementação de Thompson Construction" << std::endl;
-    std::cout << "  2. Implementação de Epsilon Closure" << std::endl;
-    std::cout << "  3. Implementação de Subset Construction (AFND→AFD)" << std::endl;
-    std::cout << "  4. Implementação de Minimização (Hopcroft/Moore)" << std::endl;
-    std::cout << "  5. Implementação do Parser Recursivo Descendente" << std::endl;
-    std::cout << "  6. Testes com exemplos Racket" << std::endl;
+    cout << "\n[TODO] Próximos passos:" << endl;
+    cout << "  1. Implementação de Thompson Construction" << endl;
+    cout << "  2. Implementação de Epsilon Closure" << endl;
+    cout << "  3. Implementação de Subset Construction (AFND→AFD)" << endl;
+    cout << "  4. Implementação de Minimização (Hopcroft/Moore)" << endl;
+    cout << "  5. Implementação do Parser Recursivo Descendente" << endl;
+    cout << "  6. Testes com exemplos Racket" << endl;
     
     return 0;
 }

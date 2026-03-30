@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 
+using namespace std;
+
 /**
  * Controller: Gerador de Scanners
  * 
@@ -18,16 +20,16 @@
  */
 class ScannerGenerator {
 private:
-    std::shared_ptr<AutomatonFactory> factory;
-    std::string lastError;
+    shared_ptr<AutomatonFactory> factory;
+    string lastError;
     
     /**
      * Gera um autômato minimizado para uma única regra
      * executa: Regex → AFND-ε → AFND → AFD → AFD-Min
      */
-    std::shared_ptr<MinimizedAFD> generateSingleScanner(
+    shared_ptr<MinimizedAFD> generateSingleScanner(
         const Regex& regex,
-        const std::string& tokenType
+        const string& tokenType
     );
     
 public:
@@ -39,14 +41,14 @@ public:
      * @param rules Pares de (tokenType, expressão_regular)
      * @return Scanner pronto para usar, ou nullptr em caso de erro
      */
-    std::shared_ptr<Scanner> generate(
-        const std::vector<std::pair<std::string, Regex>>& rules
+    shared_ptr<Scanner> generate(
+        const vector<pair<string, Regex>>& rules
     );
     
     /**
      * Obtém a mensagem de erro da última operação
      */
-    std::string getLastError() const;
+    string getLastError() const;
 };
 
 #endif // SCANNER_GENERATOR_HPP

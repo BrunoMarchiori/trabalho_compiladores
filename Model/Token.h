@@ -3,6 +3,8 @@
 
 #include <string>
 
+using namespace std;
+
 // Enumeração útil para o Parser identificar os blocos principais
 enum class TokenType {
     TOKEN_LPAREN,
@@ -18,8 +20,8 @@ enum class TokenType {
 
 struct Token {
     TokenType type;
-    std::string typeName; // Ex: "IDENTIFIER", "NUMBER" (útil para debug e impressão)
-    std::string lexeme;   // O texto real, ex: "define", "(", "42"
+    string typeName; // Ex: "IDENTIFIER", "NUMBER" (útil para debug e impressão)
+    string lexeme;   // O texto real, ex: "define", "(", "42"
     int line;
     int column;
 };

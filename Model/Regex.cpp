@@ -1,14 +1,16 @@
 #include "Regex.hpp"
 
-Regex::Regex(const std::string& expression) 
+using namespace std;
+
+Regex::Regex(const string& expression) 
     : originalExpression(expression), tokenType("") {}
 
-void Regex::setExpression(const std::string& expression) {
+void Regex::setExpression(const string& expression) {
     originalExpression = expression;
     rpn.clear();
 }
 
-std::string Regex::getExpression() const {
+string Regex::getExpression() const {
     return originalExpression;
 }
 
@@ -17,14 +19,14 @@ void Regex::toRPN() {
     rpn.clear();
 }
 
-const std::vector<std::string>& Regex::getRPN() const {
+const vector<string>& Regex::getRPN() const {
     return rpn;
 }
 
-void Regex::setTokenType(const std::string& type) {
+void Regex::setTokenType(const string& type) {
     tokenType = type;
 }
 
-std::string Regex::getTokenType() const {
+string Regex::getTokenType() const {
     return tokenType;
 }

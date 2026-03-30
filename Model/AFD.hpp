@@ -6,6 +6,8 @@
 #include <map>
 #include <set>
 
+using namespace std;
+
 // Forward declaration
 class AFND;
 
@@ -20,7 +22,7 @@ private:
     friend class ThompsonFactory;
     
     // Mapeia cada estado para o conjunto de AFND-states que representa
-    std::map<int, std::set<int>> stateMapping;
+    map<int, set<int>> stateMapping;
     
     // Construtor protegido - apenas Factory pode criar
     AFD() = default;
@@ -30,7 +32,7 @@ public:
      * Simula o AFD com uma entrada
      * Determinístico: para cada símbolo, há no máximo uma transição
      */
-    bool accepts(const std::string& input) const;
+    bool accepts(const string& input) const;
     
     /**
      * Retorna o estado alcançável de 'from' consumindo 'symbol'
@@ -41,7 +43,7 @@ public:
     /**
      * Obtém o conjunto de AFND-states que o estado AFD representa
      */
-    std::set<int> getMapping(int afdState) const;
+    set<int> getMapping(int afdState) const;
     
     /**
      * Verifica se o autômato está completamente definido

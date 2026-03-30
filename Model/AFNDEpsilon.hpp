@@ -6,6 +6,8 @@
 #include <set>
 #include <memory>
 
+using namespace std;
+
 /**
  * AFND com transições epsilon (ε-NFA)
  * Permite transições vazias que mudam de estado sem consumir símbolo
@@ -23,26 +25,26 @@ public:
      * Computa o fecho epsilon (ε-closure) de um conjunto de estados
      * Retorna todos os estados alcançáveis apenas por transições epsilon
      */
-    std::set<int> epsilonClosure(const std::set<int>& states) const;
+    set<int> epsilonClosure(const set<int>& states) const;
     
     /**
      * Retorna todos os estados alcançáveis de 'states' consumindo 'symbol'
      * seguido de transições epsilon
      */
-    std::set<int> transitionOn(
-        const std::set<int>& states, 
+    set<int> transitionOn(
+        const set<int>& states, 
         char symbol
     ) const;
     
     /**
      * Verifica se um conjunto de estados contém um estado de aceitação
      */
-    bool containsAcceptState(const std::set<int>& states) const;
+    bool containsAcceptState(const set<int>& states) const;
     
     /**
      * Simula o AFND-ε com uma entrada
      */
-    bool accepts(const std::string& input) const;
+    bool accepts(const string& input) const;
 };
 
 #endif // AFND_EPSILON_HPP

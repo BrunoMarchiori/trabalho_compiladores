@@ -1,6 +1,8 @@
 #include "MinimizedAFD.hpp"
 
-bool MinimizedAFD::accepts(const std::string& input) const {
+using namespace std;
+
+bool MinimizedAFD::accepts(const string& input) const {
     // TODO: Implementar
     return false;
 }
