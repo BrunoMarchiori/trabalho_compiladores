@@ -2,9 +2,11 @@
 #include <sstream>
 #include <algorithm>
 
-std::string SyntaxTree::toString(int depth) const {
-    std::string indent(depth * 2, ' ');
-    std::ostringstream oss;
+using namespace std;
+
+string SyntaxTree::toString(int depth) const {
+    string indent(depth * 2, ' ');
+    ostringstream oss;
     
     oss << indent << "[";
     
@@ -51,7 +53,7 @@ int SyntaxTree::getDepth() const {
     if (children.empty()) return 1;
     int maxChildDepth = 0;
     for (const auto& child : children) {
-        maxChildDepth = std::max(maxChildDepth, child->getDepth());
+        maxChildDepth = max(maxChildDepth, child->getDepth());
     }
     return 1 + maxChildDepth;
 }

@@ -9,12 +9,14 @@
 #include <iostream>
 #include <memory>
 
-ScannerGenerator::ScannerGenerator() 
-    : factory(std::make_shared<ThompsonFactory>()) {}
+using namespace std;
 
-std::shared_ptr<MinimizedAFD> ScannerGenerator::generateSingleScanner(
+ScannerGenerator::ScannerGenerator() 
+    : factory(make_shared<ThompsonFactory>()) {}
+
+shared_ptr<MinimizedAFD> ScannerGenerator::generateSingleScanner(
     const Regex& regex,
-    const std::string& tokenType
+    const string& tokenType
 ) {
     try {
         // 1. Regex (RPN) → AFND-ε (Thompson Construction)
@@ -51,20 +53,20 @@ std::shared_ptr<MinimizedAFD> ScannerGenerator::generateSingleScanner(
         
         return minimizedAfd;
         
-    } catch (const std::exception& e) {
-        lastError = std::string("Exceção: ") + e.what();
+    } catch (const exception& e) {
+        lastError = string("Exceção: ") + e.what();
         return nullptr;
     }
 }
 
-std::shared_ptr<Scanner> ScannerGenerator::generate(
-    const std::vector<std::pair<std::string, Regex>>& rules
+shared_ptr<Scanner> ScannerGenerator::generate(
+    const vector<pair<string, Regex>>& rules
 ) {
     try {
-        auto scanner = std::make_shared<Scanner>();
+        auto scanner = make_shared<Scanner>();
         
         for (const auto& rule : rules) {
-            const std::string& tokenType = rule.first;
+            const string& tokenType = rule.first;
             const Regex& regex = rule.second;
             
             auto minimizedAfd = generateSingleScanner(regex, tokenType);
@@ -78,12 +80,12 @@ std::shared_ptr<Scanner> ScannerGenerator::generate(
         
         return scanner;
         
-    } catch (const std::exception& e) {
-        lastError = std::string("Exceção em generate(): ") + e.what();
+    } catch (const exception& e) {
+        lastError = string("Exceção em generate(): ") + e.what();
         return nullptr;
     }
 }
 
-std::string ScannerGenerator::getLastError() const {
+string ScannerGenerator::getLastError() const {
     return lastError;
 }

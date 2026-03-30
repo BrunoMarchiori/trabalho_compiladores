@@ -5,6 +5,8 @@
 #include <utility>
 #include <string>
 
+using namespace std;
+
 /**
  * Representa um estado em um autômato (NFA, DFA, etc)
  * Suporta transições com símbolos e transições epsilon
@@ -12,11 +14,11 @@
 struct State {
     int id;
     bool isAccepting;
-    std::string tokenType;  // Tipo de token que este estado aceita
+    string tokenType;  // Tipo de token que este estado aceita
     
     // Transições: (símbolo, estado_destino)
     // Para epsilon, usamos '\0' como símbolo
-    std::vector<std::pair<char, int>> transitions;
+    vector<pair<char, int>> transitions;
     
     explicit State(int id) 
         : id(id), isAccepting(false), tokenType("") {}

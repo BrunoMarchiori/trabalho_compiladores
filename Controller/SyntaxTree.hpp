@@ -5,6 +5,8 @@
 #include <vector>
 #include <memory>
 
+using namespace std;
+
 /**
  * Nó da Árvore Sintática
  * Representa um elemento da linguagem Racket
@@ -30,23 +32,23 @@ public:
     };
     
     NodeType type;
-    std::string value;                      // Valor do nó (para LITERAL_*, SYMBOL)
-    std::vector<std::shared_ptr<SyntaxTree>> children;
+    string value;                      // Valor do nó (para LITERAL_*, SYMBOL)
+    vector<shared_ptr<SyntaxTree>> children;
     
-    explicit SyntaxTree(NodeType nodeType, const std::string& nodeValue = "")
+    explicit SyntaxTree(NodeType nodeType, const string& nodeValue = "")
         : type(nodeType), value(nodeValue) {}
     
     /**
      * Adiciona um filho a este nó
      */
-    void addChild(std::shared_ptr<SyntaxTree> child) {
+    void addChild(shared_ptr<SyntaxTree> child) {
         children.push_back(child);
     }
     
     /**
      * Converte a árvore para string (para debug/visualização)
      */
-    std::string toString(int depth = 0) const;
+    string toString(int depth = 0) const;
     
     /**
      * Retorna o número de nós na árvore

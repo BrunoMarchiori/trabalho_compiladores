@@ -2,12 +2,14 @@
 #include <stdexcept>
 #include <algorithm>
 
-Parser::Parser(const std::vector<Token>& tokenList) 
+using namespace std;
+
+Parser::Parser(const vector<Token>& tokenList) 
     : tokens(tokenList), currentToken(0), lastError("") {}
 
 Token& Parser::peek() {
     if (currentToken >= tokens.size()) {
-        throw std::runtime_error("EOF reached unexpectedly");
+        throw runtime_error("EOF reached unexpectedly");
     }
     return tokens[currentToken];
 }
@@ -18,7 +20,7 @@ Token Parser::consume() {
     return t;
 }
 
-bool Parser::match(const std::string& expectedType) {
+bool Parser::match(const string& expectedType) {
     if (check(expectedType)) {
         consume();
         return true;
@@ -26,12 +28,12 @@ bool Parser::match(const std::string& expectedType) {
     return false;
 }
 
-bool Parser::check(const std::string& tokenType) {
+bool Parser::check(const string& tokenType) {
     if (currentToken >= tokens.size()) return false;
     return tokens[currentToken].typeName == tokenType;
 }
 
-void Parser::error(const std::string& message) {
+void Parser::error(const string& message) {
     lastError = message + " at token: " + peek().lexeme;
 }
 
@@ -39,66 +41,66 @@ void Parser::synchronize() {
     // TODO: Implementar sincronização de erros
 }
 
-std::shared_ptr<SyntaxTree> Parser::program() {
+shared_ptr<SyntaxTree> Parser::program() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::expression() {
+shared_ptr<SyntaxTree> Parser::expression() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseDefine() {
+shared_ptr<SyntaxTree> Parser::parseDefine() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseLambda() {
+shared_ptr<SyntaxTree> Parser::parseLambda() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseIf() {
+shared_ptr<SyntaxTree> Parser::parseIf() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseCond() {
+shared_ptr<SyntaxTree> Parser::parseCond() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseLet() {
+shared_ptr<SyntaxTree> Parser::parseLet() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseFunctionCall() {
+shared_ptr<SyntaxTree> Parser::parseFunctionCall() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseLiteral() {
+shared_ptr<SyntaxTree> Parser::parseLiteral() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parseSymbol() {
+shared_ptr<SyntaxTree> Parser::parseSymbol() {
     // TODO: Implementar
     return nullptr;
 }
 
-std::shared_ptr<SyntaxTree> Parser::parse() {
+shared_ptr<SyntaxTree> Parser::parse() {
     try {
         return program();
-    } catch (const std::exception& e) {
-        error(std::string(e.what()));
+    } catch (const exception& e) {
+        error(string(e.what()));
         return nullptr;
     }
 }
 
-std::string Parser::getLastError() const {
+string Parser::getLastError() const {
     return lastError;
 }
 

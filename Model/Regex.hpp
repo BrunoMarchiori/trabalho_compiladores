@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 /**
  * Regex: Representa uma expressão regular estruturada
  * A expressão é armazenada em notação polonesa reversa (RPN)
@@ -11,22 +13,22 @@
  */
 class Regex {
 private:
-    std::string originalExpression;  // Expressão original
-    std::vector<std::string> rpn;    // Notação polonesa reversa
-    std::string tokenType;           // Tipo de token que essa regex reconhece
+    string originalExpression;  // Expressão original
+    vector<string> rpn;    // Notação polonesa reversa
+    string tokenType;           // Tipo de token que essa regex reconhece
     
 public:
-    explicit Regex(const std::string& expression = "");
+    explicit Regex(const string& expression = "");
     
     /**
      * Define a expressão regular
      */
-    void setExpression(const std::string& expression);
+    void setExpression(const string& expression);
     
     /**
      * Obtém a expressão original
      */
-    std::string getExpression() const;
+    string getExpression() const;
     
     /**
      * Converte para notação polonesa reversa
@@ -36,17 +38,17 @@ public:
     /**
      * Obtém a representação em RPN
      */
-    const std::vector<std::string>& getRPN() const;
+    const vector<string>& getRPN() const;
     
     /**
      * Define o tipo de token
      */
-    void setTokenType(const std::string& type);
+    void setTokenType(const string& type);
     
     /**
      * Obtém o tipo de token
      */
-    std::string getTokenType() const;
+    string getTokenType() const;
 };
 
 #endif // REGEX_HPP
