@@ -6,6 +6,8 @@
 #include <set>
 #include <string>
 
+using namespace std;
+
 /**
  * Classe base para todos os tipos de autômato
  * Define a interface comum para consultas e operações
@@ -13,9 +15,9 @@
 class AutomatonBase {
 protected:
     int startState;
-    std::set<int> acceptStates;
-    std::vector<State> states;
-    std::string tokenType;
+    set<int> acceptStates;
+    vector<State> states;
+    string tokenType;
     
 public:
     AutomatonBase() : startState(-1), tokenType("") {}
@@ -29,22 +31,22 @@ public:
     /**
      * Retorna os estados de aceitação
      */
-    const std::set<int>& getAcceptStates() const { return acceptStates; }
+    const set<int>& getAcceptStates() const { return acceptStates; }
     
     /**
      * Retorna todos os estados
      */
-    const std::vector<State>& getStates() const { return states; }
+    const vector<State>& getStates() const { return states; }
     
     /**
      * Define o tipo de token aceito
      */
-    void setTokenType(const std::string& type) { tokenType = type; }
+    void setTokenType(const string& type) { tokenType = type; }
     
     /**
      * Obtém o tipo de token
      */
-    std::string getTokenType() const { return tokenType; }
+    string getTokenType() const { return tokenType; }
     
     /**
      * Número total de estados

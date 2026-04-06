@@ -6,6 +6,8 @@
 #include <vector>
 #include <memory>
 
+using namespace std;
+
 // Forward declarations
 class AFNDEpsilon;
 class AFND;
@@ -35,29 +37,29 @@ public:
      * Gera AFND-ε a partir de uma expressão regular estruturada
      * (em notação polonesa reversa)
      */
-    virtual std::shared_ptr<AFNDEpsilon> generateAFNDEpsilon(
+    virtual shared_ptr<AFNDEpsilon> generateAFNDEpsilon(
         const Regex& regexStructured
     ) = 0;
     
     /**
      * Converte AFND-ε para AFND (remove transições epsilon)
      */
-    virtual std::shared_ptr<AFND> generateAFND(
-        const std::shared_ptr<AFNDEpsilon>& afndEpsilon
+    virtual shared_ptr<AFND> generateAFND(
+        const shared_ptr<AFNDEpsilon>& afndEpsilon
     ) = 0;
     
     /**
      * Converte AFND para AFD via subconjunto (subset construction)
      */
-    virtual std::shared_ptr<AFD> generateAFD(
-        const std::shared_ptr<AFND>& afnd
+    virtual shared_ptr<AFD> generateAFD(
+        const shared_ptr<AFND>& afnd
     ) = 0;
     
     /**
      * Minimiza um AFD usando algoritmo de Hopcroft ou Moore
      */
-    virtual std::shared_ptr<MinimizedAFD> minimizeAFD(
-        const std::shared_ptr<AFD>& afd
+    virtual shared_ptr<MinimizedAFD> minimizeAFD(
+        const shared_ptr<AFD>& afd
     ) = 0;
 };
 

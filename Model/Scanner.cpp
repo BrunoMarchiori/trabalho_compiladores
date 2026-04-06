@@ -1,22 +1,24 @@
 #include "Scanner.hpp"
 #include <algorithm>
 
-Scanner::Scanner(std::shared_ptr<MinimizedAFD> singleRule) {
+using namespace std;
+
+Scanner::Scanner(shared_ptr<MinimizedAFD> singleRule) {
     if (singleRule) {
         rules["DEFAULT"] = singleRule;
     }
 }
 
 void Scanner::addRule(
-    const std::string& tokenType, 
-    std::shared_ptr<MinimizedAFD> automaton
+    const string& tokenType, 
+    shared_ptr<MinimizedAFD> automaton
 ) {
     if (automaton) {
         rules[tokenType] = automaton;
     }
 }
 
-std::vector<Token> Scanner::scan(const std::string& sourceCode) {
+vector<Token> Scanner::scan(const string& sourceCode) {
     // TODO: Implementar lexicalização
     return {};
 }

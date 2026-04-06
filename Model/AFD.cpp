@@ -1,6 +1,8 @@
 #include "AFD.hpp"
 
-bool AFD::accepts(const std::string& input) const {
+using namespace std;
+
+bool AFD::accepts(const string& input) const {
     // TODO: Implementar
     return false;
 }
@@ -10,7 +12,7 @@ int AFD::transitionOn(int from, char symbol) const {
     return -1;
 }
 
-std::set<int> AFD::getMapping(int afdState) const {
+set<int> AFD::getMapping(int afdState) const {
     // TODO: Implementar
     return {};
 }

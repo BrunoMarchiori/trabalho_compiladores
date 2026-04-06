@@ -5,6 +5,8 @@
 #include <memory>
 #include <map>
 
+using namespace std;
+
 // Forward declaration
 class AFD;
 
@@ -19,7 +21,7 @@ private:
     friend class ThompsonFactory;
     
     // Mapeia cada estado minimizado para o estado original do AFD
-    std::map<int, int> equivalenceClass;
+    map<int, int> equivalenceClass;
     
     // Construtor protegido - apenas Factory pode criar
     MinimizedAFD() = default;
@@ -28,7 +30,7 @@ public:
     /**
      * Simula o AFD minimizado com uma entrada
      */
-    bool accepts(const std::string& input) const;
+    bool accepts(const string& input) const;
     
     /**
      * Retorna o estado alcançável de 'from' consumindo 'symbol'

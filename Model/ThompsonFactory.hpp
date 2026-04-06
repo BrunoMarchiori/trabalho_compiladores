@@ -7,6 +7,8 @@
 #include <vector>
 #include <memory>
 
+using namespace std;
+
 // Forward declarations para evitar includes circulares
 class Regex;
 class AFNDEpsilon;
@@ -30,23 +32,23 @@ private:
      */
     
     /// Cria AFND-ε para um símbolo literal
-    std::shared_ptr<AFNDEpsilon> thomsonSymbol(char symbol);
+    shared_ptr<AFNDEpsilon> thomsonSymbol(char symbol);
     
     /// Concatena dois AFND-ε: a seguido de b
-    std::shared_ptr<AFNDEpsilon> thomsonConcat(
-        std::shared_ptr<AFNDEpsilon> a,
-        std::shared_ptr<AFNDEpsilon> b
+    shared_ptr<AFNDEpsilon> thomsonConcat(
+        shared_ptr<AFNDEpsilon> a,
+        shared_ptr<AFNDEpsilon> b
     );
     
     /// União de dois AFND-ε: a | b
-    std::shared_ptr<AFNDEpsilon> thomsonUnion(
-        std::shared_ptr<AFNDEpsilon> a,
-        std::shared_ptr<AFNDEpsilon> b
+    shared_ptr<AFNDEpsilon> thomsonUnion(
+        shared_ptr<AFNDEpsilon> a,
+        shared_ptr<AFNDEpsilon> b
     );
     
     /// Fecho de Kleene: a*
-    std::shared_ptr<AFNDEpsilon> thomsonKleene(
-        std::shared_ptr<AFNDEpsilon> a
+    shared_ptr<AFNDEpsilon> thomsonKleene(
+        shared_ptr<AFNDEpsilon> a
     );
     
 public:
@@ -56,29 +58,29 @@ public:
      * Gera AFND-ε a partir de Regex (RPN) usando Construção de Thompson
      * Processa a notação polonesa reversa com uma pilha
      */
-    std::shared_ptr<AFNDEpsilon> generateAFNDEpsilon(
+    shared_ptr<AFNDEpsilon> generateAFNDEpsilon(
         const Regex& regexStructured
     ) override;
     
     /**
      * Remove transições epsilon via epsilon-closure
      */
-    std::shared_ptr<AFND> generateAFND(
-        const std::shared_ptr<AFNDEpsilon>& afndEpsilon
+    shared_ptr<AFND> generateAFND(
+        const shared_ptr<AFNDEpsilon>& afndEpsilon
     ) override;
     
     /**
      * Subset construction: converte AFND em AFD
      */
-    std::shared_ptr<AFD> generateAFD(
-        const std::shared_ptr<AFND>& afnd
+    shared_ptr<AFD> generateAFD(
+        const shared_ptr<AFND>& afnd
     ) override;
     
     /**
      * Minimiza AFD via agrupamento de estados equivalentes
      */
-    std::shared_ptr<MinimizedAFD> minimizeAFD(
-        const std::shared_ptr<AFD>& afd
+    shared_ptr<MinimizedAFD> minimizeAFD(
+        const shared_ptr<AFD>& afd
     ) override;
 };
 
