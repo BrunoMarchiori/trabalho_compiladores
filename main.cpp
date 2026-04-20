@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <fstream>
+#include <sstream>
 #include "Controller/ScannerGenerator.hpp"
 #include "Controller/Parser.hpp"
 #include "Model/Regex.hpp"
@@ -8,33 +10,92 @@
 
 using namespace std;
 
-int main(int argc, char* argv[]) {
-    (void)argc;
-    (void)argv;
+// Função helper para ler arquivo
+string readFile(const string& filename) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("Não conseguiu abrir arquivo: " + filename);
+    }
+    stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+// Função helper para parsear regex.txt
+vector<pair<string, Regex>> parseRegexFile(const string& fileContent) {
+    vector<pair<string, Regex>> rules;
+    stringstream ss(fileContent);
+    string line;
     
+    while (getline(ss, line)) {
+        // Ignora linhas vazias e comentários
+        if (line.empty() || line[0] == ';') continue;
+        
+        // Formato: <TOKEN_TYPE> regex_pattern
+        size_t pos = line.find('>');
+        if (pos == string::npos) continue;
+        
+        string tokenType = line.substr(1, pos - 1);  // Remove < >
+        string pattern = line.substr(pos + 2);       // Remove espaço
+        
+        Regex regex(pattern);
+        regex.setTokenType(tokenType);
+        rules.push_back({tokenType, regex});
+    }
+    
+    return rules;
+}
+
+int main(int argc, char* argv[]) {
     cout << "========================================" << endl;
     cout << "  Compilador Racket - MVC Architecture  " << endl;
     cout << "========================================" << endl;
     
-    // TODO: Implementar pipeline completo
-    // 1. Carregar regras léxicas (regex.txt)
-    // 2. Usar ScannerGenerator para criar Scanner via Abstract Factory
-    // 3. Lexicalizar o código fonte
-    // 4. Usar Parser para gerar Árvore Sintática
-    // 5. Exibir resultados/erros
-    
-    cout << "\n[INFO] Estrutura MVC inicializada com sucesso!" << endl;
-    cout << "  - Model: Autômatos (AFND-ε → AFND → AFD → AFD-Min)" << endl;
-    cout << "  - Controller: ScannerGenerator + Parser" << endl;
-    cout << "  - View: (a implementar)" << endl;
-    
-    cout << "\n[TODO] Próximos passos:" << endl;
-    cout << "  1. Implementação de Thompson Construction" << endl;
-    cout << "  2. Implementação de Epsilon Closure" << endl;
-    cout << "  3. Implementação de Subset Construction (AFND→AFD)" << endl;
-    cout << "  4. Implementação de Minimização (Hopcroft/Moore)" << endl;
-    cout << "  5. Implementação do Parser Recursivo Descendente" << endl;
-    cout << "  6. Testes com exemplos Racket" << endl;
+    try {
+        // 1. LER REGEX.TXT
+        cout << "\n[1] Carregando regras léxicas..." << endl;
+        string regexFileContent = readFile("regex.txt");
+        vector<pair<string, Regex>> rules = parseRegexFile(regexFileContent);
+        cout << "    ✓ " << rules.size() << " regras carregadas" << endl;
+        
+        // 2. GERAR SCANNER (ScannerGenerator)
+        cout << "\n[2] Gerando scanner..." << endl;
+        ScannerGenerator generator;
+        auto scanner = generator.generate(rules);
+        
+        if (!scanner) {
+            cerr << "✗ Erro ao gerar scanner: " << generator.getLastError() << endl;
+            return 1;
+        }
+        cout << "    ✓ Scanner gerado com sucesso" << endl;
+        
+        // 3. LER PROGRAMA.RKT
+        cout << "\n[3] Lendo programa..." << endl;
+        string programContent = readFile("programa.rkt");
+        
+        // 4. LEXICALIZAR
+        cout << "\n[4] Lexicalizando..." << endl;
+        auto tokens = scanner->scan(programContent);
+        cout << "    ✓ " << tokens.size() << " tokens gerados" << endl;
+        
+        // 5. FAZER PARSING
+        cout << "\n[5] Parsing..." << endl;
+        Parser parser(tokens);
+        auto ast = parser.parse();
+        
+        if (!ast) {
+            cerr << "✗ Erro de parsing" << endl;
+            return 1;
+        }
+        
+        // 6. EXIBIR AST
+        cout << "\n[6] Árvore Sintática:" << endl;
+        cout << ast->toString() << endl;
+        
+    } catch (const exception& e) {
+        cerr << "✗ Erro: " << e.what() << endl;
+        return 1;
+    }
     
     return 0;
 }
