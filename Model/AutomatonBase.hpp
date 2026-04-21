@@ -1,57 +1,77 @@
 #ifndef AUTOMATON_BASE_HPP
 #define AUTOMATON_BASE_HPP
 
-#include "State.hpp"
 #include <vector>
 #include <set>
 #include <string>
+#include <memory>
+#include "State.hpp" // Certifique-se de que o State está incluído
 
-using namespace std;
-
-/**
- * Classe base para todos os tipos de autômato
- * Define a interface comum para consultas e operações
- */
 class AutomatonBase {
 protected:
     int startState;
-    set<int> acceptStates;
-    vector<State> states;
-    string tokenType;
-    
+    std::vector<State> states;
+    std::set<int> acceptStates;
+    std::string tokenType;
+
 public:
-    AutomatonBase() : startState(-1), tokenType("") {}
+    AutomatonBase() : startState(-1) {}
     virtual ~AutomatonBase() = default;
-    
-    /**
-     * Retorna o estado inicial
-     */
+
+    // Métodos Genéricos de Gerenciamento do Grafo
+    int addState() {
+        int id = states.size();
+        states.emplace_back(id);
+        return id;
+    }
+
+    void addTransition(int from, char symbol, int to) {
+        if (from >= 0 && from < (int)states.size()) {
+            states[from].transitions.push_back({symbol, to});
+        }
+    }
+
+    void setStartState(int id) { startState = id; }
     int getStartState() const { return startState; }
     
-    /**
-     * Retorna os estados de aceitação
-     */
-    const set<int>& getAcceptStates() const { return acceptStates; }
+    void addAcceptState(int id) { acceptStates.insert(id); }
+    const std::set<int>& getAcceptStates() const { return acceptStates; }
+    void clearAcceptStates() { acceptStates.clear(); }
     
-    /**
-     * Retorna todos os estados
-     */
-    const vector<State>& getStates() const { return states; }
+    int getStateCount() const { return (int)states.size(); }
     
-    /**
-     * Define o tipo de token aceito
-     */
-    void setTokenType(const string& type) { tokenType = type; }
+    void setTokenType(const std::string& type) { tokenType = type; }
+    std::string getTokenType() const { return tokenType; }
     
-    /**
-     * Obtém o tipo de token
-     */
-    string getTokenType() const { return tokenType; }
-    
-    /**
-     * Número total de estados
-     */
-    int getStateCount() const { return states.size(); }
+    // O método de merge inteligente que a Factory usa
+    int appendStatesFrom(const std::shared_ptr<AutomatonBase>& other) {
+        int offset = states.size();
+        for (const auto& otherState : other->states) {
+            int newId = this->addState();
+            for (const auto& trans : otherState.transitions) {
+                this->addTransition(newId, trans.first, trans.second + offset);
+            }
+        }
+        return offset;
+    }
+
+    // Assinatura que as classes filhas são obrigadas a implementar
+    virtual bool accepts(const std::string& input) const = 0;
+
+    // Retorna o alfabeto usado pelo autômato (ignorando transições vazias)
+    std::set<char> getAlphabet() const {
+        std::set<char> alphabet;
+        for (const State& state : states) {
+            for (const auto& transition : state.transitions) {
+                char symbol = transition.first;
+                // Ignora o epsilon ('\0')
+                if (symbol != '\0') {
+                    alphabet.insert(symbol);
+                }
+            }
+        }
+        return alphabet;
+    }
 };
 
 #endif // AUTOMATON_BASE_HPP

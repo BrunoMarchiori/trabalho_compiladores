@@ -31,23 +31,23 @@ private:
      * Operações base de Thompson para construir AFND-ε
      */
     
-    /// Cria AFND-ε para um símbolo literal
-    shared_ptr<AFNDEpsilon> thomsonSymbol(char symbol);
+    //// Cria AFND-ε para um símbolo literal ou classe de caracteres
+    shared_ptr<AFNDEpsilon> thompsonSymbol(const string& symbol);
     
     /// Concatena dois AFND-ε: a seguido de b
-    shared_ptr<AFNDEpsilon> thomsonConcat(
+    shared_ptr<AFNDEpsilon> thompsonConcat(
         shared_ptr<AFNDEpsilon> a,
         shared_ptr<AFNDEpsilon> b
     );
     
     /// União de dois AFND-ε: a | b
-    shared_ptr<AFNDEpsilon> thomsonUnion(
+    shared_ptr<AFNDEpsilon> thompsonUnion(
         shared_ptr<AFNDEpsilon> a,
         shared_ptr<AFNDEpsilon> b
     );
     
     /// Fecho de Kleene: a*
-    shared_ptr<AFNDEpsilon> thomsonKleene(
+    shared_ptr<AFNDEpsilon> thompsonKleene(
         shared_ptr<AFNDEpsilon> a
     );
     

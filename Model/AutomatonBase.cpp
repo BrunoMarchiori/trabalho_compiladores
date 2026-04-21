@@ -7,3 +7,4 @@
 State AutomatonFactory::createState() {
     return State(stateCounter++);
 }
+

@@ -14,7 +14,6 @@ MODEL_SRCS = Model/AutomatonBase.cpp \
              Model/AFD.cpp \
              Model/MinimizedAFD.cpp \
              Model/ThompsonFactory.cpp \
-             Model/Generator.cpp \
              Model/Regex.cpp \
              Model/Scanner.cpp
 
