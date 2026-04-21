@@ -19,8 +19,112 @@ void Scanner::addRule(
 }
 
 vector<Token> Scanner::scan(const string& sourceCode) {
-    // TODO: Implementar lexicalização
-    return {};
+    vector<Token> tokens;
+    int line = 1;
+    int column = 1;
+    size_t pos = 0;
+    
+    while (pos < sourceCode.length()) {
+        string bestMatch = "";
+        string bestTokenType = "";
+        size_t bestLength = 0;
+        
+        // Tenta todas as regras para encontrar o match mais longo
+        for (const auto& rule : rules) {
+            const string& tokenType = rule.first;
+            const auto& automaton = rule.second;
+            
+            if (!automaton) continue;
+            
+            // Tenta substrings crescentes desta posição
+            for (size_t len = 1; len <= sourceCode.length() - pos; ++len) {
+                string candidate = sourceCode.substr(pos, len);
+                
+                // Se o autômato aceita e é mais longo que antes, guarda
+                if (automaton->accepts(candidate)) {
+                    if (len > bestLength) {
+                        bestMatch = candidate;
+                        bestTokenType = tokenType;
+                        bestLength = len;
+                    }
+                } else {
+                    // Se não aceita, não adianta tentar comprimentos maiores
+                    break;
+                }
+            }
+        }
+        
+        if (bestLength > 0) {
+            Token token;
+            token.typeName = bestTokenType;
+            token.lexeme = bestMatch;
+            token.line = line;
+            token.column = column;
+            
+            // Mapeia tipo de nome para TokenType
+            if (bestTokenType.find("WHITESPACE") != string::npos) {
+                token.type = TokenType::TOKEN_WHITESPACE;
+            } else if (bestTokenType.find("NUMBER") != string::npos || 
+                      bestTokenType.find("INTEGER") != string::npos ||
+                      bestTokenType.find("FLOAT") != string::npos) {
+                token.type = TokenType::TOKEN_NUMBER;
+            } else if (bestTokenType.find("STRING") != string::npos) {
+                token.type = TokenType::TOKEN_STRING;
+            } else if (bestTokenType.find("LPAREN") != string::npos) {
+                token.type = TokenType::TOKEN_LPAREN;
+            } else if (bestTokenType.find("RPAREN") != string::npos) {
+                token.type = TokenType::TOKEN_RPAREN;
+            } else if (bestTokenType.find("SYMBOL") != string::npos ||
+                      bestTokenType.find("IDENTIFIER") != string::npos) {
+                token.type = TokenType::TOKEN_IDENTIFIER;
+            } else {
+                token.type = TokenType::TOKEN_DYNAMIC;
+            }
+            
+            tokens.push_back(token);
+            
+            // Atualiza posição e rastreia linhas/colunas
+            for (char c : bestMatch) {
+                if (c == '\n') {
+                    line++;
+                    column = 1;
+                } else {
+                    column++;
+                }
+            }
+            
+            pos += bestLength;
+        } else {
+            // Nenhuma regra casou: erro
+            Token errorToken;
+            errorToken.type = TokenType::TOKEN_ERROR;
+            errorToken.typeName = "ERROR";
+            errorToken.lexeme = sourceCode.substr(pos, 1);
+            errorToken.line = line;
+            errorToken.column = column;
+            
+            tokens.push_back(errorToken);
+            
+            if (sourceCode[pos] == '\n') {
+                line++;
+                column = 1;
+            } else {
+                column++;
+            }
+            pos++;
+        }
+    }
+    
+    // Adiciona EOF
+    Token eofToken;
+    eofToken.type = TokenType::TOKEN_EOF;
+    eofToken.typeName = "EOF";
+    eofToken.lexeme = "";
+    eofToken.line = line;
+    eofToken.column = column;
+    tokens.push_back(eofToken);
+    
+    return tokens;
 }
 
 int Scanner::getRuleCount() const {
