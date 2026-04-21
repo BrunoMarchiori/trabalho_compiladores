@@ -1,4 +1,5 @@
 #include "AFND.hpp"
+
 #include <algorithm>
 
 using namespace std;
