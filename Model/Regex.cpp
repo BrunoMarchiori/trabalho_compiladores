@@ -28,7 +28,7 @@ void Regex::toRPN() {
         
         // Escape: \x
         if (c == '\\' && i + 1 < originalExpression.length()) {
-            tokens.push_back(string(1, originalExpression[++i]));
+            tokens.push_back(string("\\") + originalExpression[++i]);
         }
         // Classe de caracteres: [...]
         else if (c == '[') {
