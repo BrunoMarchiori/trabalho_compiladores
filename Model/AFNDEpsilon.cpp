@@ -18,7 +18,7 @@ set<int> AFNDEpsilon::epsilonClosure(const set<int>& states) const {
         int current = q.front();
         q.pop();
         
-        if (current < 0 || current >= (int)states.size()) continue;
+        if (current < 0 || current >= (int)this->states.size()) continue;
         
         // Procura por transições epsilon (símbolo '\0') do estado atual
         for (const auto& transition : this->states[current].transitions) {
