@@ -184,8 +184,8 @@ shared_ptr<AFNDEpsilon> ThompsonFactory::generateAFNDEpsilon(const Regex& regexS
 }
 
 shared_ptr<AFND> ThompsonFactory::generateAFND(const shared_ptr<AFNDEpsilon>& nfaE) {
-    auto nfa = shared_ptr<AFND>(new AFND());
     if (!nfaE) return nullptr;
+    auto nfa = shared_ptr<AFND>(new AFND());
 
     // 1. O novo estado inicial é o epsilon-closure do antigo estado inicial
     set<int> startSet = nfaE->epsilonClosure({nfaE->getStartState()});
@@ -211,6 +211,7 @@ shared_ptr<AFND> ThompsonFactory::generateAFND(const shared_ptr<AFNDEpsilon>& nf
 
         // Para cada símbolo do alfabeto, verifica para onde o closure consegue ir
         for (char c : alphabet) {
+            // transitionOn() já retorna o epsilon-closure dos estados alcançáveis
             set<int> targets = nfaE->transitionOn(closureI, c);
             // Adiciona transições diretas bypassando os Epsilons intermediários
             for (int t : targets) {
@@ -219,7 +220,12 @@ shared_ptr<AFND> ThompsonFactory::generateAFND(const shared_ptr<AFNDEpsilon>& nf
         }
     }
     
-    nfa->setStartState(nfaE->getStartState());
+    // Valida antes de definir o estado inicial
+    int startState = nfaE->getStartState();
+    if (startState < 0) {
+        return nullptr;  // Estado inicial inválido
+    }
+    nfa->setStartState(startState);
     return nfa;
 }
 
