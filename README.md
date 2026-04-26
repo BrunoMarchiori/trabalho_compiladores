@@ -57,6 +57,48 @@ Tratamento de erro:
 - `regex.txt` -> regras léxicas
 - `Examples/` -> casos válidos e inválidos
 
+## Diagramas de funcionamento
+
+### 1) Geração do scanner (pipeline de autômatos)
+
+```mermaid
+flowchart LR
+    A[regex.txt<br/>regras léxicas] --> B[Regex.toRPN]
+    B --> C[AFND-epsilon<br/>Thompson]
+    C --> D[AFND<br/>remove epsilon]
+    D --> E[AFD<br/>subset construction]
+    E --> F[AFD minimizado]
+    F --> G[Scanner combinado]
+```
+
+### 2) Execução principal (scanner + parser)
+
+```mermaid
+flowchart TD
+    A[Entrada .rkt] --> B[Scanner]
+    B --> C{Erro léxico?}
+    C -- Sim --> D[Programa rejeitado<br/>lista de erros léxicos]
+    C -- Não --> E[Parser top-down]
+    E --> F{Erro sintático?}
+    F -- Sim --> G[Programa rejeitado<br/>lista de erros sintáticos]
+    F -- Não --> H[Programa aceito<br/>imprime AST]
+```
+
+### 3) Bateria progressiva de testes
+
+```mermaid
+flowchart LR
+    A[Scripts/run_progressive_tests.sh] --> B[make -s]
+    B --> C[Executa 24 casos<br/>L1..L8]
+    C --> D{Validação de saída}
+    D -->|valid| E[Programa aceito.]
+    D -->|invalid_lex| F[Erros léxicos]
+    D -->|invalid_syn| G[Erros sintáticos]
+    E --> H[Resumo final pass/fail]
+    F --> H
+    G --> H
+```
+
 ## Requisitos
 
 - `g++` com suporte a C++17
