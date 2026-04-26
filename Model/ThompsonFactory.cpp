@@ -10,6 +10,20 @@
 
 using namespace std;
 
+namespace {
+char decodeEscapeChar(char escaped) {
+    switch (escaped) {
+        case 'n': return '\n';
+        case 't': return '\t';
+        case 'r': return '\r';
+        case '\\': return '\\';
+        case '"': return '"';
+        case '\'': return '\'';
+        default: return escaped;
+    }
+}
+} // namespace
+
 shared_ptr<AFNDEpsilon> ThompsonFactory::thompsonSymbol(const string& symbol) {
     // Como a Factory é friend da classe, usamos o 'new' diretamente para 
     // contornar o construtor privado sem quebrar o encapsulamento.
@@ -23,7 +37,7 @@ shared_ptr<AFNDEpsilon> ThompsonFactory::thompsonSymbol(const string& symbol) {
     
     // Se for um caractere simples ou um escape comum (ex: 'a' ou '\n')
     if (symbol.length() == 1 || (symbol.length() == 2 && symbol[0] == '\\')) {
-        char c = (symbol.length() == 2) ? symbol[1] : symbol[0];
+        char c = (symbol.length() == 2) ? decodeEscapeChar(symbol[1]) : symbol[0];
         afnd->addTransition(startState, c, acceptState);
     } 
     // Se for uma classe de caracteres como [a-z] ou [0-9]
@@ -46,6 +60,8 @@ shared_ptr<AFNDEpsilon> ThompsonFactory::thompsonSymbol(const string& symbol) {
                 // Ignora a barra de escape se ela estiver escapando algo dentro do colchete
                 if (content[i] == '\\' && i + 1 < content.length()) {
                     i++;
+                    afnd->addTransition(startState, decodeEscapeChar(content[i]), acceptState);
+                    continue;
                 }
                 afnd->addTransition(startState, content[i], acceptState);
             }

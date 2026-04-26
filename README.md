@@ -1,0 +1,143 @@
+# Gerador de Scanner + Parser Top-Down para Racket
+
+Este repositório implementa a **1ª entrega** do trabalho de compiladores:
+
+- Gerador de scanner a partir de expressões regulares
+- Parser top-down (descendente recursivo) para uma linguagem escolhida
+
+A linguagem escolhida neste projeto é **Racket**.
+
+## O que foi implementado
+
+### 1. Gerador de scanner
+
+Entrada:
+- Arquivo `regex.txt` com regras no formato `<TOKEN> expressao_regular`
+
+Saída:
+- Scanner capaz de tokenizar um programa Racket
+
+Características:
+- Pipeline completo de construção de autômatos:
+  - Regex -> AFND-ε -> AFND -> AFD -> AFD minimizado
+- Regra de **maximal munch** (maior casamento possível)
+- Desempate por **prioridade de regra** (ordem em `regex.txt`)
+- Suporte a tokens ignoráveis (`WHITESPACE`, `COMMENT`, `NEWLINE`)
+- Erro léxico com **linha/coluna** para símbolos inválidos
+
+### 2. Parser top-down
+
+Entrada:
+- Lista de tokens produzida pelo scanner
+
+Saída:
+- AST (árvore sintática) quando o programa é aceito
+- Lista de erros sintáticos quando rejeitado
+
+Escopo coberto:
+- Expressões gerais
+- Formas especiais:
+  - `define`
+  - `lambda`
+  - `if`
+  - `cond`
+  - `let`
+- Chamada de função
+- Literais (número, string, booleano)
+
+Tratamento de erro:
+- Recuperação com sincronização
+- Coleta de múltiplos erros (não para no primeiro)
+
+## Estrutura principal
+
+- `Model/` -> autômatos, regex, scanner, token
+- `Controller/` -> gerador de scanner, parser, árvore sintática
+- `main.cpp` -> fluxo completo CLI (scanner + parser)
+- `regex.txt` -> regras léxicas
+- `examples/` -> casos válidos e inválidos
+
+## Requisitos
+
+- `g++` com suporte a C++17
+- `make`
+
+## Compilação
+
+```bash
+make clean
+make
+```
+
+Executável gerado:
+
+```bash
+./compilador_racket
+```
+
+## Execução
+
+### Arquivo padrão
+
+```bash
+./compilador_racket
+```
+
+Usa `programa.rkt` por padrão.
+
+### Arquivo específico
+
+```bash
+./compilador_racket examples/valido_define_if.rkt
+```
+
+## Exemplos disponíveis
+
+### Válidos
+
+- `examples/valido_define_if.rkt`
+- `examples/valido_lambda_let_cond.rkt`
+
+### Inválidos
+
+- `examples/invalido_lexico.rkt` (erro léxico)
+- `examples/invalido_sintatico.rkt` (erro sintático)
+
+## Formato do `regex.txt`
+
+Cada linha de regra deve seguir:
+
+```text
+<TOKEN> expressao_regular
+```
+
+Exemplo:
+
+```text
+<KEYWORD_DEFINE> define
+<INTEGER> -?[0-9]+
+<LPAREN> \(
+<RPAREN> \)
+```
+
+Linhas vazias e linhas iniciadas com `;` são ignoradas.
+
+## Saída esperada
+
+### Caso aceito
+
+- Mensagem `Programa aceito.`
+- Impressão da AST
+
+### Caso rejeitado
+
+- Mensagem `Programa rejeitado.`
+- Lista de erros com contexto (linha/coluna/token)
+
+## Entregáveis atendidos
+
+- Código fonte
+- Makefile e instruções de compilação/execução
+- Arquivos de exemplo
+
+Se o trabalho for em equipe, o relatório de atuação dos membros pode ser incluído como arquivo adicional (por exemplo: `RELATORIO_EQUIPE.md`).

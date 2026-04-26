@@ -18,6 +18,7 @@ private:
     vector<Token> tokens;
     size_t currentToken = 0;
     string lastError;
+    vector<string> errors;
     
     /**
      * Obtém o token atual
@@ -38,6 +39,16 @@ private:
      * Verifica se o token atual é do tipo esperado
      */
     bool check(const string& tokenType);
+
+    /**
+     * Consome token esperado; registra erro se não encontrar.
+     */
+    bool expect(const string& expectedType, const string& message);
+
+    /**
+     * Verifica se o token atual pode iniciar uma expressão.
+     */
+    bool isExpressionStart() const;
     
     /**
      * Reporta um erro e armazena para recover
@@ -94,6 +105,11 @@ public:
      * Obtém a mensagem de erro do último parse
      */
     string getLastError() const;
+
+    /**
+     * Lista de erros coletados durante o parse
+     */
+    vector<string> getErrors() const;
     
     /**
      * Verifica se houve erro durante parse

@@ -1,63 +1,134 @@
 #include <iostream>
-#include <fstream>  // <--- ADICIONE ESTA LINHA AQUI
+#include <fstream>
 #include <vector>
 #include <string>
-#include <iomanip>
-#include "Model/Regex.hpp"
-#include "Model/ThompsonFactory.hpp"
-#include "Model/AFNDEpsilon.hpp"
-#include "Model/AFND.hpp"
-#include "Model/AFD.hpp"
-#include "Model/MinimizedAFD.hpp"
+#include <sstream>
+#include "Controller/ScannerGenerator.hpp"
+#include "Controller/Parser.hpp"
 
 using namespace std;
 
-int main() {
-    ThompsonFactory factory;
-    
-    // Agora o compilador sabe o que é um ifstream
-    ifstream file("regex.txt");
-    string line;
+namespace {
+bool parseRegexRule(const string& line, string& tokenType, string& pattern) {
+    if (line.empty() || line[0] == ';') {
+        return false;
+    }
 
-    // Verifica se o arquivo abriu corretamente para evitar crashes
+    size_t start = line.find('<');
+    size_t end = line.find('>');
+    if (start == string::npos || end == string::npos || end <= start + 1) {
+        return false;
+    }
+
+    tokenType = line.substr(start + 1, end - start - 1);
+    pattern = line.substr(end + 1);
+
+    size_t firstNonSpace = pattern.find_first_not_of(" \t\r");
+    if (firstNonSpace == string::npos) {
+        return false;
+    }
+    pattern = pattern.substr(firstNonSpace);
+    return true;
+}
+
+bool loadScannerRules(const string& regexPath, vector<pair<string, Regex>>& rules, string& err) {
+    ifstream file(regexPath);
     if (!file.is_open()) {
-        cerr << "Erro: Não foi possível abrir o arquivo regex.txt" << endl;
+        err = "Não foi possível abrir o arquivo de regex: " + regexPath;
+        return false;
+    }
+
+    string line;
+    while (getline(file, line)) {
+        string tokenType;
+        string pattern;
+        if (!parseRegexRule(line, tokenType, pattern)) {
+            continue;
+        }
+
+        Regex regex(pattern);
+        regex.toRPN();
+        rules.push_back({tokenType, regex});
+    }
+
+    if (rules.empty()) {
+        err = "Nenhuma regra válida encontrada em " + regexPath;
+        return false;
+    }
+
+    return true;
+}
+
+bool readSourceFile(const string& sourcePath, string& sourceCode, string& err) {
+    ifstream sourceFile(sourcePath);
+    if (!sourceFile.is_open()) {
+        err = "Não foi possível abrir o arquivo fonte: " + sourcePath;
+        return false;
+    }
+
+    ostringstream oss;
+    oss << sourceFile.rdbuf();
+    sourceCode = oss.str();
+    return true;
+}
+} // namespace
+
+int main(int argc, char* argv[]) {
+    const string regexPath = "regex.txt";
+    const string sourcePath = (argc > 1) ? argv[1] : "programa.rkt";
+
+    vector<pair<string, Regex>> rules;
+    string errorMessage;
+    if (!loadScannerRules(regexPath, rules, errorMessage)) {
+        cerr << "Erro: " << errorMessage << endl;
         return 1;
     }
 
-    cout << left << setw(25) << "TOKEN" << setw(10) << "NFA-e" << setw(10) << "NFA" 
-         << setw(10) << "DFA" << setw(10) << "MIN" << endl;
-    cout << string(65, '-') << endl;
-
-    while (getline(file, line)) {
-        if (line.empty() || line[0] == ';') continue;
-
-        size_t start = line.find('<') + 1;
-        size_t end = line.find('>');
-        string type = line.substr(start, end - start);
-        string pattern = line.substr(end + 2);
-
-        Regex r(pattern);
-        r.toRPN();
-
-        auto nfaE = factory.generateAFNDEpsilon(r);
-        auto nfa = factory.generateAFND(nfaE);
-        auto afd = factory.generateAFD(nfa);
-        auto min = factory.minimizeAFD(afd);
-
-        // Algumas defesas caso algum ponteiro volte nulo por erro na regex
-        int nfaE_count = nfaE ? nfaE->getStateCount() : 0;
-        int nfa_count  = nfa ? nfa->getStateCount() : 0;
-        int afd_count  = afd ? afd->getStateCount() : 0;
-        int min_count  = min ? min->getStateCount() : 0;
-
-        cout << left << setw(25) << type 
-             << setw(10) << nfaE_count
-             << setw(10) << nfa_count
-             << setw(10) << afd_count
-             << setw(10) << min_count << endl;
+    ScannerGenerator generator;
+    auto scanner = generator.generate(rules);
+    if (!scanner) {
+        cerr << "Erro ao gerar scanner: " << generator.getLastError() << endl;
+        return 1;
     }
-    
-    file.close();
+
+    string sourceCode;
+    if (!readSourceFile(sourcePath, sourceCode, errorMessage)) {
+        cerr << "Erro: " << errorMessage << endl;
+        return 1;
+    }
+
+    auto tokens = scanner->scan(sourceCode);
+    vector<string> lexicalErrors;
+    for (const auto& token : tokens) {
+        if (token.type == TokenType::TOKEN_ERROR) {
+            ostringstream oss;
+            oss << "Linha " << token.line << ", Coluna " << token.column
+                << ": símbolo inválido \"" << token.lexeme << "\"";
+            lexicalErrors.push_back(oss.str());
+        }
+    }
+
+    if (!lexicalErrors.empty()) {
+        cout << "Programa rejeitado. Erros léxicos encontrados:\n";
+        for (const auto& err : lexicalErrors) {
+            cout << "- " << err << '\n';
+        }
+        return 1;
+    }
+
+    Parser parser(tokens);
+    auto ast = parser.parse();
+
+    if (parser.hasError() || !ast) {
+        cout << "Programa rejeitado. Erros sintáticos encontrados:\n";
+        for (const auto& err : parser.getErrors()) {
+            cout << "- " << err << '\n';
+        }
+        return 1;
+    }
+
+    cout << "Programa aceito.\n";
+    cout << "AST:\n";
+    cout << ast->toString() << '\n';
     return 0;
 }

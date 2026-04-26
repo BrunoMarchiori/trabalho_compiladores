@@ -5,7 +5,7 @@ using namespace std;
 
 Scanner::Scanner(shared_ptr<MinimizedAFD> singleRule) {
     if (singleRule) {
-        rules["DEFAULT"] = singleRule;
+        rules.push_back({"DEFAULT", singleRule});
     }
 }
 
@@ -14,7 +14,7 @@ void Scanner::addRule(
     shared_ptr<MinimizedAFD> automaton
 ) {
     if (automaton) {
-        rules[tokenType] = automaton;
+        rules.push_back({tokenType, automaton});
     }
 }
 
@@ -29,7 +29,8 @@ vector<Token> Scanner::scan(const string& sourceCode) {
         string bestTokenType = "";
         size_t bestLength = 0;
         
-        // Tenta todas as regras para encontrar o match mais longo
+        // Tenta todas as regras para encontrar o match mais longo.
+        // Em empate de tamanho, a regra adicionada primeiro vence.
         for (const auto& rule : rules) {
             const string& tokenType = rule.first;
             const auto& automaton = rule.second;
@@ -47,9 +48,6 @@ vector<Token> Scanner::scan(const string& sourceCode) {
                         bestTokenType = tokenType;
                         bestLength = len;
                     }
-                } else {
-                    // Se não aceita, não adianta tentar comprimentos maiores
-                    break;
                 }
             }
         }
@@ -81,7 +79,12 @@ vector<Token> Scanner::scan(const string& sourceCode) {
                 token.type = TokenType::TOKEN_DYNAMIC;
             }
             
-            tokens.push_back(token);
+            bool ignoreToken = bestTokenType.find("WHITESPACE") != string::npos ||
+                              bestTokenType.find("COMMENT") != string::npos ||
+                              bestTokenType.find("NEWLINE") != string::npos;
+            if (!ignoreToken) {
+                tokens.push_back(token);
+            }
             
             // Atualiza posição e rastreia linhas/colunas
             for (char c : bestMatch) {
@@ -128,5 +131,5 @@ vector<Token> Scanner::scan(const string& sourceCode) {
 }
 
 int Scanner::getRuleCount() const {
-    return rules.size();
+    return static_cast<int>(rules.size());
 }
