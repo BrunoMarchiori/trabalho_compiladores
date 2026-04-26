@@ -18,6 +18,7 @@ private:
     vector<Token> tokens;
     size_t currentToken = 0;
     string lastError;
+    vector<string> errors;
     
     /**
      * Obtém o token atual
@@ -38,6 +39,18 @@ private:
      * Verifica se o token atual é do tipo esperado
      */
     bool check(const string& tokenType);
+
+    bool checkAny(const string& first, const string& second);
+
+    /**
+     * Consome token esperado; registra erro se não encontrar.
+     */
+    bool expect(const string& expectedType, const string& message);
+
+    /**
+     * Verifica se o token atual pode iniciar uma expressão.
+     */
+    bool isExpressionStart() const;
     
     /**
      * Reporta um erro e armazena para recover
@@ -58,22 +71,25 @@ private:
     shared_ptr<SyntaxTree> expression();
     
     /// Forma especial: (define ...)
-    shared_ptr<SyntaxTree> parseDefine();
+    shared_ptr<SyntaxTree> parseDefine(const string& closeToken);
     
     /// Forma especial: (lambda ...)
-    shared_ptr<SyntaxTree> parseLambda();
+    shared_ptr<SyntaxTree> parseLambda(const string& closeToken);
     
     /// Forma especial: (if ...)
-    shared_ptr<SyntaxTree> parseIf();
+    shared_ptr<SyntaxTree> parseIf(const string& closeToken);
     
     /// Forma especial: (cond ...)
-    shared_ptr<SyntaxTree> parseCond();
+    shared_ptr<SyntaxTree> parseCond(const string& closeToken);
     
     /// Forma especial: (let ...)
-    shared_ptr<SyntaxTree> parseLet();
+    shared_ptr<SyntaxTree> parseLet(const string& closeToken);
     
     /// Combinação de função e argumentos: (func arg1 arg2 ...)
-    shared_ptr<SyntaxTree> parseFunctionCall();
+    shared_ptr<SyntaxTree> parseFunctionCall(const string& closeToken);
+
+    /// Citação: 'expr, `expr, ,expr
+    shared_ptr<SyntaxTree> parseQuoteLike(const string& quoteType);
     
     /// Literal: número ou string
     shared_ptr<SyntaxTree> parseLiteral();
@@ -94,6 +110,11 @@ public:
      * Obtém a mensagem de erro do último parse
      */
     string getLastError() const;
+
+    /**
+     * Lista de erros coletados durante o parse
+     */
+    vector<string> getErrors() const;
     
     /**
      * Verifica se houve erro durante parse

@@ -1,6 +1,8 @@
 <COMMENT> ;.*
 <NEWLINE> \n
 <WHITESPACE> [ \t]+
+<LANG_DIRECTIVE> #lang[ \t]+[a-zA-Z0-9_+\-*/<>=!?#.]+
+<KEYWORD_ATTRIBUTE> #:[a-zA-Z_+\-*/<>=!?][a-zA-Z0-9_+\-*/<>=!?]*
 
 <BOOLEAN_TRUE> #t
 <BOOLEAN_FALSE> #f
@@ -26,7 +28,7 @@
 
 <STRING> "([^"\\]|\\.)*"
 
-<SYMBOL> [a-zA-Z_+\-*/<>=!?][a-zA-Z0-9_+\-*/<>=!?]*
+<SYMBOL> [a-zA-Z_#:+\-*/<>=!?~.][a-zA-Z0-9_#:+\-*/<>=!?~.]*
 
 <LPAREN> \(
 <RPAREN> \)

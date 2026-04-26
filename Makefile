@@ -67,5 +67,9 @@ $(EXEC): $(OBJS)
 clean:
 	rm -f $(OBJS) $(EXEC)
 
+# Executa suíte progressiva de testes
+test-progressive: $(EXEC)
+	bash Scripts/run_progressive_tests.sh
+
 # Lista de targets "phony" (não são arquivos reais)
-.PHONY: all clean
+.PHONY: all clean test-progressive

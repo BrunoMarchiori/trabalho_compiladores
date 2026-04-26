@@ -3,9 +3,21 @@
 
 using namespace std;
 
+namespace {
+Token makeStringToken(const string& lexeme, int line, int column) {
+    Token token;
+    token.type = TokenType::TOKEN_STRING;
+    token.typeName = "STRING";
+    token.lexeme = lexeme;
+    token.line = line;
+    token.column = column;
+    return token;
+}
+} // namespace
+
 Scanner::Scanner(shared_ptr<MinimizedAFD> singleRule) {
     if (singleRule) {
-        rules["DEFAULT"] = singleRule;
+        rules.push_back({"DEFAULT", singleRule});
     }
 }
 
@@ -14,7 +26,7 @@ void Scanner::addRule(
     shared_ptr<MinimizedAFD> automaton
 ) {
     if (automaton) {
-        rules[tokenType] = automaton;
+        rules.push_back({tokenType, automaton});
     }
 }
 
@@ -25,11 +37,61 @@ vector<Token> Scanner::scan(const string& sourceCode) {
     size_t pos = 0;
     
     while (pos < sourceCode.length()) {
+        // Processa strings diretamente para suportar escapes e conteúdo UTF-8.
+        if (sourceCode[pos] == '"') {
+            size_t startPos = pos;
+            int startLine = line;
+            int startColumn = column;
+            pos++;
+            column++;
+
+            bool escaped = false;
+            bool closed = false;
+
+            while (pos < sourceCode.length()) {
+                char c = sourceCode[pos];
+                if (c == '\n') {
+                    line++;
+                    column = 1;
+                } else {
+                    column++;
+                }
+
+                if (!escaped && c == '"') {
+                    pos++;
+                    closed = true;
+                    break;
+                }
+
+                if (!escaped && c == '\\') {
+                    escaped = true;
+                } else {
+                    escaped = false;
+                }
+
+                pos++;
+            }
+
+            Token token;
+            if (closed) {
+                token = makeStringToken(sourceCode.substr(startPos, pos - startPos), startLine, startColumn);
+            } else {
+                token.type = TokenType::TOKEN_ERROR;
+                token.typeName = "ERROR";
+                token.lexeme = sourceCode.substr(startPos, pos - startPos);
+                token.line = startLine;
+                token.column = startColumn;
+            }
+            tokens.push_back(token);
+            continue;
+        }
+
         string bestMatch = "";
         string bestTokenType = "";
         size_t bestLength = 0;
         
-        // Tenta todas as regras para encontrar o match mais longo
+        // Tenta todas as regras para encontrar o match mais longo.
+        // Em empate de tamanho, a regra adicionada primeiro vence.
         for (const auto& rule : rules) {
             const string& tokenType = rule.first;
             const auto& automaton = rule.second;
@@ -47,9 +109,6 @@ vector<Token> Scanner::scan(const string& sourceCode) {
                         bestTokenType = tokenType;
                         bestLength = len;
                     }
-                } else {
-                    // Se não aceita, não adianta tentar comprimentos maiores
-                    break;
                 }
             }
         }
@@ -81,7 +140,13 @@ vector<Token> Scanner::scan(const string& sourceCode) {
                 token.type = TokenType::TOKEN_DYNAMIC;
             }
             
-            tokens.push_back(token);
+            bool ignoreToken = bestTokenType.find("WHITESPACE") != string::npos ||
+                              bestTokenType.find("COMMENT") != string::npos ||
+                              bestTokenType.find("NEWLINE") != string::npos ||
+                              bestTokenType.find("LANG_DIRECTIVE") != string::npos;
+            if (!ignoreToken) {
+                tokens.push_back(token);
+            }
             
             // Atualiza posição e rastreia linhas/colunas
             for (char c : bestMatch) {
@@ -128,5 +193,5 @@ vector<Token> Scanner::scan(const string& sourceCode) {
 }
 
 int Scanner::getRuleCount() const {
-    return rules.size();
+    return static_cast<int>(rules.size());
 }

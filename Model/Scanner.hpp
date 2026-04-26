@@ -6,7 +6,6 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <map>
 
 using namespace std;
 
@@ -17,8 +16,8 @@ using namespace std;
  */
 class Scanner {
 private:
-    // Mapeia tipo de token → autômato minimizado
-    map<string, shared_ptr<MinimizedAFD>> rules;
+    // Mantém ordem de inserção para prioridade entre regras de mesmo tamanho.
+    vector<pair<string, shared_ptr<MinimizedAFD>>> rules;
     
 public:
     Scanner() = default;
