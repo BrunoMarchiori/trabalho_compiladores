@@ -46,6 +46,13 @@ shared_ptr<AFNDEpsilon> ThompsonFactory::thompsonSymbol(const string& symbol) {
         string content = symbol.substr(1, symbol.length() - 2);
         
         for (size_t i = 0; i < content.length(); ++i) {
+            // Escape explícito dentro de classe (ex: \-, \], \\)
+            if (content[i] == '\\' && i + 1 < content.length()) {
+                i++;
+                afnd->addTransition(startState, decodeEscapeChar(content[i]), acceptState);
+                continue;
+            }
+
             // Detecta um intervalo (ex: a-z)
             if (i + 2 < content.length() && content[i+1] == '-') {
                 char startChar = content[i];
@@ -56,13 +63,7 @@ shared_ptr<AFNDEpsilon> ThompsonFactory::thompsonSymbol(const string& symbol) {
                 }
                 i += 2; // Pula o formato 'a-z'
             } else {
-                // Caractere individual dentro da classe (ex: os símbolos em [+\-*/])
-                // Ignora a barra de escape se ela estiver escapando algo dentro do colchete
-                if (content[i] == '\\' && i + 1 < content.length()) {
-                    i++;
-                    afnd->addTransition(startState, decodeEscapeChar(content[i]), acceptState);
-                    continue;
-                }
+                // Caractere individual dentro da classe
                 afnd->addTransition(startState, content[i], acceptState);
             }
         }

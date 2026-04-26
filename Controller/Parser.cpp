@@ -36,6 +36,10 @@ bool Parser::check(const string& tokenType) {
     return tokens[currentToken].typeName == tokenType;
 }
 
+bool Parser::checkAny(const string& first, const string& second) {
+    return check(first) || check(second);
+}
+
 bool Parser::expect(const string& expectedType, const string& message) {
     if (check(expectedType)) {
         consume();
@@ -49,7 +53,8 @@ bool Parser::isExpressionStart() const {
     if (currentToken >= tokens.size()) return false;
 
     const string& type = tokens[currentToken].typeName;
-    if (type == "LPAREN") return true;
+    if (type == "LPAREN" || type == "LBRACKET") return true;
+    if (type == "QUOTE" || type == "QUASIQUOTE" || type == "UNQUOTE" || type == "UNQUOTE_SPLICING") return true;
     if (type == "INTEGER" || type == "FLOAT" || type == "STRING") return true;
     if (type == "BOOLEAN_TRUE" || type == "BOOLEAN_FALSE") return true;
     if (type == "SYMBOL" || type == "IDENTIFIER") return true;
@@ -75,7 +80,7 @@ void Parser::error(const string& message) {
 
 void Parser::synchronize() {
     while (!check("EOF")) {
-        if (check("RPAREN")) {
+        if (check("RPAREN") || check("RBRACKET")) {
             consume();
             return;
         }
@@ -110,15 +115,27 @@ shared_ptr<SyntaxTree> Parser::expression() {
         return nullptr;
     }
 
-    if (check("LPAREN")) {
-        consume(); // Consome '('
-        if (check("KEYWORD_DEFINE")) return parseDefine();
-        if (check("KEYWORD_LAMBDA")) return parseLambda();
-        if (check("KEYWORD_IF")) return parseIf();
-        if (check("KEYWORD_COND")) return parseCond();
-        if (check("KEYWORD_LET")) return parseLet();
-        return parseFunctionCall();
+    if (checkAny("LPAREN", "LBRACKET")) {
+        const string openToken = consume().typeName;
+        const string closeToken = (openToken == "LBRACKET") ? "RBRACKET" : "RPAREN";
+
+        // Lista vazia: () ou []
+        if (check(closeToken)) {
+            consume();
+            return make_shared<SyntaxTree>(SyntaxTree::NodeType::LIST);
+        }
+
+        if (check("KEYWORD_DEFINE")) return parseDefine(closeToken);
+        if (check("KEYWORD_LAMBDA")) return parseLambda(closeToken);
+        if (check("KEYWORD_IF")) return parseIf(closeToken);
+        if (check("KEYWORD_COND")) return parseCond(closeToken);
+        if (check("KEYWORD_LET") || check("KEYWORD_LETSTAR") || check("KEYWORD_LETREC")) return parseLet(closeToken);
+        return parseFunctionCall(closeToken);
     }
+
+    if (check("QUOTE")) return parseQuoteLike("QUOTE");
+    if (check("QUASIQUOTE")) return parseQuoteLike("QUASIQUOTE");
+    if (check("UNQUOTE") || check("UNQUOTE_SPLICING")) return parseQuoteLike("UNQUOTE");
 
     if (check("INTEGER") || check("FLOAT") || check("STRING") ||
         check("BOOLEAN_TRUE") || check("BOOLEAN_FALSE")) {
@@ -129,7 +146,8 @@ shared_ptr<SyntaxTree> Parser::expression() {
         check("KEYWORD_AND") || check("KEYWORD_OR") || check("KEYWORD_NOT") ||
         check("KEYWORD_CASE") || check("KEYWORD_BEGIN") || check("KEYWORD_QUOTE") ||
         check("KEYWORD_QUASIQUOTE") || check("KEYWORD_UNQUOTE") || check("KEYWORD_LETSTAR") ||
-        check("KEYWORD_LETREC") || (currentToken < tokens.size() && tokens[currentToken].typeName.rfind("OPERATOR_", 0) == 0)) {
+        check("KEYWORD_LETREC") || check("KEYWORD_ATTRIBUTE") ||
+        (currentToken < tokens.size() && tokens[currentToken].typeName.rfind("OPERATOR_", 0) == 0)) {
         return parseSymbol();
     }
 
@@ -137,13 +155,13 @@ shared_ptr<SyntaxTree> Parser::expression() {
     return nullptr;
 }
 
-shared_ptr<SyntaxTree> Parser::parseDefine() {
+shared_ptr<SyntaxTree> Parser::parseDefine(const string& closeToken) {
     auto node = make_shared<SyntaxTree>(SyntaxTree::NodeType::DEFINE);
     expect("KEYWORD_DEFINE", "Forma define inválida");
 
     // (define (f x y) body...)
-    if (check("LPAREN")) {
-        consume();
+    if (checkAny("LPAREN", "LBRACKET")) {
+        const string signatureClose = (consume().typeName == "LBRACKET") ? "RBRACKET" : "RPAREN";
 
         if (!check("SYMBOL")) {
             error("Nome de função esperado em define");
@@ -152,7 +170,7 @@ shared_ptr<SyntaxTree> Parser::parseDefine() {
         }
 
         auto params = make_shared<SyntaxTree>(SyntaxTree::NodeType::LIST, "params");
-        while (!check("RPAREN") && !check("EOF")) {
+        while (!check(signatureClose) && !check("EOF")) {
             if (!check("SYMBOL")) {
                 error("Parâmetro inválido em define");
                 consume();
@@ -161,10 +179,10 @@ shared_ptr<SyntaxTree> Parser::parseDefine() {
             params->addChild(parseSymbol());
         }
         node->addChild(params);
-        expect("RPAREN", "Faltando ')' após lista de parâmetros de define");
+        expect(signatureClose, "Faltando fechamento da lista de parâmetros de define");
 
         bool hasBody = false;
-        while (!check("RPAREN") && !check("EOF")) {
+        while (!check(closeToken) && !check("EOF")) {
             auto bodyExpr = expression();
             if (bodyExpr) {
                 node->addChild(bodyExpr);
@@ -176,7 +194,7 @@ shared_ptr<SyntaxTree> Parser::parseDefine() {
         if (!hasBody) {
             error("define de função precisa de corpo");
         }
-        expect("RPAREN", "Faltando ')' para fechar define");
+        expect(closeToken, "Faltando fechamento para define");
         return node;
     }
 
@@ -194,17 +212,21 @@ shared_ptr<SyntaxTree> Parser::parseDefine() {
         node->addChild(valueExpr);
     }
 
-    expect("RPAREN", "Faltando ')' para fechar define");
+    expect(closeToken, "Faltando fechamento para define");
     return node;
 }
 
-shared_ptr<SyntaxTree> Parser::parseLambda() {
+shared_ptr<SyntaxTree> Parser::parseLambda(const string& closeToken) {
     auto node = make_shared<SyntaxTree>(SyntaxTree::NodeType::LAMBDA);
     expect("KEYWORD_LAMBDA", "Forma lambda inválida");
-    expect("LPAREN", "Faltando '(' para lista de parâmetros de lambda");
+    if (!checkAny("LPAREN", "LBRACKET")) {
+        error("Faltando lista de parâmetros de lambda");
+        return node;
+    }
+    const string paramsClose = (consume().typeName == "LBRACKET") ? "RBRACKET" : "RPAREN";
 
     auto params = make_shared<SyntaxTree>(SyntaxTree::NodeType::LIST, "params");
-    while (!check("RPAREN") && !check("EOF")) {
+    while (!check(paramsClose) && !check("EOF")) {
         if (!check("SYMBOL")) {
             error("Parâmetro inválido em lambda");
             consume();
@@ -213,10 +235,10 @@ shared_ptr<SyntaxTree> Parser::parseLambda() {
         params->addChild(parseSymbol());
     }
     node->addChild(params);
-    expect("RPAREN", "Faltando ')' após parâmetros de lambda");
+    expect(paramsClose, "Faltando fechamento após parâmetros de lambda");
 
     bool hasBody = false;
-    while (!check("RPAREN") && !check("EOF")) {
+    while (!check(closeToken) && !check("EOF")) {
         auto bodyExpr = expression();
         if (bodyExpr) {
             node->addChild(bodyExpr);
@@ -229,11 +251,11 @@ shared_ptr<SyntaxTree> Parser::parseLambda() {
     if (!hasBody) {
         error("lambda precisa de pelo menos uma expressão no corpo");
     }
-    expect("RPAREN", "Faltando ')' para fechar lambda");
+    expect(closeToken, "Faltando fechamento para lambda");
     return node;
 }
 
-shared_ptr<SyntaxTree> Parser::parseIf() {
+shared_ptr<SyntaxTree> Parser::parseIf(const string& closeToken) {
     auto node = make_shared<SyntaxTree>(SyntaxTree::NodeType::IF);
     expect("KEYWORD_IF", "Forma if inválida");
 
@@ -249,16 +271,16 @@ shared_ptr<SyntaxTree> Parser::parseIf() {
         node->addChild(elseExpr);
     }
 
-    expect("RPAREN", "Faltando ')' para fechar if");
+    expect(closeToken, "Faltando fechamento para if");
     return node;
 }
 
-shared_ptr<SyntaxTree> Parser::parseCond() {
+shared_ptr<SyntaxTree> Parser::parseCond(const string& closeToken) {
     auto node = make_shared<SyntaxTree>(SyntaxTree::NodeType::COND);
     expect("KEYWORD_COND", "Forma cond inválida");
 
     bool hasClause = false;
-    while (!check("RPAREN") && !check("EOF")) {
+    while (!check(closeToken) && !check("EOF")) {
         bool bracketClause = false;
         if (check("LBRACKET")) {
             bracketClause = true;
@@ -302,17 +324,31 @@ shared_ptr<SyntaxTree> Parser::parseCond() {
     if (!hasClause) {
         error("cond deve ter ao menos uma cláusula");
     }
-    expect("RPAREN", "Faltando ')' para fechar cond");
+    expect(closeToken, "Faltando fechamento para cond");
     return node;
 }
 
-shared_ptr<SyntaxTree> Parser::parseLet() {
+shared_ptr<SyntaxTree> Parser::parseLet(const string& closeToken) {
     auto node = make_shared<SyntaxTree>(SyntaxTree::NodeType::LET);
-    expect("KEYWORD_LET", "Forma let inválida");
-    expect("LPAREN", "Faltando '(' para lista de bindings de let");
+    if (check("KEYWORD_LET")) {
+        consume();
+    } else if (check("KEYWORD_LETSTAR")) {
+        consume();
+        node->value = "let*";
+    } else if (check("KEYWORD_LETREC")) {
+        consume();
+        node->value = "letrec";
+    } else {
+        error("Forma let inválida");
+    }
+    if (!checkAny("LPAREN", "LBRACKET")) {
+        error("Faltando lista de bindings de let");
+        return node;
+    }
+    const string bindingsClose = (consume().typeName == "LBRACKET") ? "RBRACKET" : "RPAREN";
 
     auto bindings = make_shared<SyntaxTree>(SyntaxTree::NodeType::BINDING_LIST);
-    while (!check("RPAREN") && !check("EOF")) {
+    while (!check(bindingsClose) && !check("EOF")) {
         bool bracketBinding = false;
         if (check("LBRACKET")) {
             bracketBinding = true;
@@ -344,11 +380,11 @@ shared_ptr<SyntaxTree> Parser::parseLet() {
         bindings->addChild(binding);
     }
 
-    expect("RPAREN", "Faltando ')' após lista de bindings de let");
+    expect(bindingsClose, "Faltando fechamento após lista de bindings de let");
     node->addChild(bindings);
 
     bool hasBody = false;
-    while (!check("RPAREN") && !check("EOF")) {
+    while (!check(closeToken) && !check("EOF")) {
         auto bodyExpr = expression();
         if (bodyExpr) {
             node->addChild(bodyExpr);
@@ -361,14 +397,14 @@ shared_ptr<SyntaxTree> Parser::parseLet() {
     if (!hasBody) {
         error("let precisa de pelo menos uma expressão no corpo");
     }
-    expect("RPAREN", "Faltando ')' para fechar let");
+    expect(closeToken, "Faltando fechamento para let");
     return node;
 }
 
-shared_ptr<SyntaxTree> Parser::parseFunctionCall() {
+shared_ptr<SyntaxTree> Parser::parseFunctionCall(const string& closeToken) {
     auto node = make_shared<SyntaxTree>(SyntaxTree::NodeType::FUNCTION_CALL);
 
-    if (check("RPAREN")) {
+    if (check(closeToken)) {
         error("Aplicação de função vazia não é permitida");
         consume();
         return node;
@@ -381,7 +417,7 @@ shared_ptr<SyntaxTree> Parser::parseFunctionCall() {
         node->addChild(callee);
     }
 
-    while (!check("RPAREN") && !check("EOF")) {
+    while (!check(closeToken) && !check("EOF")) {
         auto arg = expression();
         if (arg) {
             node->addChild(arg);
@@ -389,7 +425,19 @@ shared_ptr<SyntaxTree> Parser::parseFunctionCall() {
             synchronize();
         }
     }
-    expect("RPAREN", "Faltando ')' para fechar chamada de função");
+    expect(closeToken, "Faltando fechamento para chamada de função");
+    return node;
+}
+
+shared_ptr<SyntaxTree> Parser::parseQuoteLike(const string& quoteType) {
+    consume(); // consome QUOTE/QUASIQUOTE/UNQUOTE
+    auto node = make_shared<SyntaxTree>(SyntaxTree::NodeType::QUOTE, quoteType);
+    auto quotedExpr = expression();
+    if (!quotedExpr) {
+        error("Expressão esperada após citação");
+        return node;
+    }
+    node->addChild(quotedExpr);
     return node;
 }
 

@@ -3,6 +3,18 @@
 
 using namespace std;
 
+namespace {
+Token makeStringToken(const string& lexeme, int line, int column) {
+    Token token;
+    token.type = TokenType::TOKEN_STRING;
+    token.typeName = "STRING";
+    token.lexeme = lexeme;
+    token.line = line;
+    token.column = column;
+    return token;
+}
+} // namespace
+
 Scanner::Scanner(shared_ptr<MinimizedAFD> singleRule) {
     if (singleRule) {
         rules.push_back({"DEFAULT", singleRule});
@@ -25,6 +37,55 @@ vector<Token> Scanner::scan(const string& sourceCode) {
     size_t pos = 0;
     
     while (pos < sourceCode.length()) {
+        // Processa strings diretamente para suportar escapes e conteúdo UTF-8.
+        if (sourceCode[pos] == '"') {
+            size_t startPos = pos;
+            int startLine = line;
+            int startColumn = column;
+            pos++;
+            column++;
+
+            bool escaped = false;
+            bool closed = false;
+
+            while (pos < sourceCode.length()) {
+                char c = sourceCode[pos];
+                if (c == '\n') {
+                    line++;
+                    column = 1;
+                } else {
+                    column++;
+                }
+
+                if (!escaped && c == '"') {
+                    pos++;
+                    closed = true;
+                    break;
+                }
+
+                if (!escaped && c == '\\') {
+                    escaped = true;
+                } else {
+                    escaped = false;
+                }
+
+                pos++;
+            }
+
+            Token token;
+            if (closed) {
+                token = makeStringToken(sourceCode.substr(startPos, pos - startPos), startLine, startColumn);
+            } else {
+                token.type = TokenType::TOKEN_ERROR;
+                token.typeName = "ERROR";
+                token.lexeme = sourceCode.substr(startPos, pos - startPos);
+                token.line = startLine;
+                token.column = startColumn;
+            }
+            tokens.push_back(token);
+            continue;
+        }
+
         string bestMatch = "";
         string bestTokenType = "";
         size_t bestLength = 0;
@@ -81,7 +142,8 @@ vector<Token> Scanner::scan(const string& sourceCode) {
             
             bool ignoreToken = bestTokenType.find("WHITESPACE") != string::npos ||
                               bestTokenType.find("COMMENT") != string::npos ||
-                              bestTokenType.find("NEWLINE") != string::npos;
+                              bestTokenType.find("NEWLINE") != string::npos ||
+                              bestTokenType.find("LANG_DIRECTIVE") != string::npos;
             if (!ignoreToken) {
                 tokens.push_back(token);
             }

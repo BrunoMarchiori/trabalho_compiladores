@@ -55,7 +55,7 @@ Tratamento de erro:
 - `Controller/` -> gerador de scanner, parser, árvore sintática
 - `main.cpp` -> fluxo completo CLI (scanner + parser)
 - `regex.txt` -> regras léxicas
-- `examples/` -> casos válidos e inválidos
+- `Examples/` -> casos válidos e inválidos
 
 ## Requisitos
 
@@ -88,20 +88,19 @@ Usa `programa.rkt` por padrão.
 ### Arquivo específico
 
 ```bash
-./compilador_racket examples/valido_define_if.rkt
+./compilador_racket Examples/L1_valid.rkt
 ```
 
 ## Exemplos disponíveis
 
-### Válidos
+### Bateria progressiva (8 níveis)
 
-- `examples/valido_define_if.rkt`
-- `examples/valido_lambda_let_cond.rkt`
-
-### Inválidos
-
-- `examples/invalido_lexico.rkt` (erro léxico)
-- `examples/invalido_sintatico.rkt` (erro sintático)
+- Diretório: `Examples/`
+- Formato por nível:
+  - `L<N>_valid.rkt`
+  - `L<N>_invalid_lex.rkt`
+  - `L<N>_invalid_syn.rkt`
+- Matriz de cobertura: `Docs/progressive_matrix.md`
 
 ## Formato do `regex.txt`
 
@@ -141,3 +140,23 @@ Linhas vazias e linhas iniciadas com `;` são ignoradas.
 - Arquivos de exemplo
 
 Se o trabalho for em equipe, o relatório de atuação dos membros pode ser incluído como arquivo adicional (por exemplo: `RELATORIO_EQUIPE.md`).
+
+## Testes progressivos
+
+Comando único:
+
+```bash
+make test-progressive
+```
+
+Ou diretamente:
+
+```bash
+bash Scripts/run_progressive_tests.sh
+```
+
+O script:
+- compila o projeto
+- executa 24 casos (8 níveis x 3 cenários)
+- valida por saída esperada (`Programa aceito.`, `Erros léxicos`, `Erros sintáticos`)
+- imprime resumo final com pass/fail e lista de falhas

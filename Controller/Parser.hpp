@@ -40,6 +40,8 @@ private:
      */
     bool check(const string& tokenType);
 
+    bool checkAny(const string& first, const string& second);
+
     /**
      * Consome token esperado; registra erro se não encontrar.
      */
@@ -69,22 +71,25 @@ private:
     shared_ptr<SyntaxTree> expression();
     
     /// Forma especial: (define ...)
-    shared_ptr<SyntaxTree> parseDefine();
+    shared_ptr<SyntaxTree> parseDefine(const string& closeToken);
     
     /// Forma especial: (lambda ...)
-    shared_ptr<SyntaxTree> parseLambda();
+    shared_ptr<SyntaxTree> parseLambda(const string& closeToken);
     
     /// Forma especial: (if ...)
-    shared_ptr<SyntaxTree> parseIf();
+    shared_ptr<SyntaxTree> parseIf(const string& closeToken);
     
     /// Forma especial: (cond ...)
-    shared_ptr<SyntaxTree> parseCond();
+    shared_ptr<SyntaxTree> parseCond(const string& closeToken);
     
     /// Forma especial: (let ...)
-    shared_ptr<SyntaxTree> parseLet();
+    shared_ptr<SyntaxTree> parseLet(const string& closeToken);
     
     /// Combinação de função e argumentos: (func arg1 arg2 ...)
-    shared_ptr<SyntaxTree> parseFunctionCall();
+    shared_ptr<SyntaxTree> parseFunctionCall(const string& closeToken);
+
+    /// Citação: 'expr, `expr, ,expr
+    shared_ptr<SyntaxTree> parseQuoteLike(const string& quoteType);
     
     /// Literal: número ou string
     shared_ptr<SyntaxTree> parseLiteral();
