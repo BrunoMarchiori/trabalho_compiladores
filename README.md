@@ -181,8 +181,6 @@ Linhas vazias e linhas iniciadas com `;` são ignoradas.
 - Makefile e instruções de compilação/execução
 - Arquivos de exemplo
 
-Se o trabalho for em equipe, o relatório de atuação dos membros pode ser incluído como arquivo adicional (por exemplo: `RELATORIO_EQUIPE.md`).
-
 ## Testes progressivos
 
 Comando único:
